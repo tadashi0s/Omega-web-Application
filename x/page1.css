@@ -1,0 +1,15 @@
+#lightbox{
+	height: 0;
+	width: 0;
+	position: fixed;
+	top: 0;
+	left: 0;
+	overflow: hidden;
+}
+#lightbox:target{
+	height: 40%;
+	width: 40%;
+	top: 25%;
+	left: 25%;
+	background-color:lightgrey;
+}
