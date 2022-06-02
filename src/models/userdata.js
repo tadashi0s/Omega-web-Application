@@ -54,3 +54,8 @@ userdataSchema.pre("save", async function (next) {
 })
 const Userdata = new mongoose.model("Userdata", userdataSchema);
 module.exports = Userdata;
+module.exports.logout_get=(req,res)=>{
+    // res.cookie('jwt','',{maxAge:1});
+    res.clearCookie('jwt');
+    res.render('login');
+}

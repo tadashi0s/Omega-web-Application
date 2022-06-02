@@ -3,7 +3,7 @@ const path = require("path");
 const app = express();
 const hbs = require("hbs");
 const jwt = require("jsonwebtoken");
-const cookie = require("cookie-parser");
+const cookieParser = require("cookie-parser");
 require("./db/connect");
 const Userdata = require("./models/userdata");
 const auth = require("./middleware/auth");
@@ -12,6 +12,7 @@ const port = process.env.PORT || 5000; // setting default port
 const bcrypt = require("bcryptjs"); //securing password
 // setting the path
 const static_path = path.join(__dirname, "../public");
+// const auth_path = path.join(__dirname, "../middleware");
 const template_path = path.join(__dirname, "../Templates/views");
 //middleware
 app.use(
@@ -27,7 +28,7 @@ app.use(
   express.static(path.join(__dirname, "../node_modules/jquery/dist"))
 );
 app.use(express.json());
-app.use(cookie());
+app.use(cookieParser());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(static_path));
 app.set("view engine", "hbs");
@@ -40,23 +41,28 @@ app.get("/", (req, res) => {
 app.get("/sign", (req, res) => {
   res.render("sign");
 });
-// app.get("/Desktop", auth, (req, res) => {
-//   res.render("Desktop");
-// });
-app.get("/logout", auth, async (req, res) => {
-  try {
-    req.user.token = req.user.token.filter((currentElement) => {
-      return currentElement.token != req.token;
-    });
-    res.clearCookie("jwt");
-    console.log("logout successfully");
-    await req.user.save();
-    res.render("login");
-  } catch (error) {
-    res.status(500).send(error);
-  }
+app.get("/login", auth, (req, res) => {
+  console.log(req.cookies.jwt);
+  res.render("Desktop");
 });
-
+app.get("/chat", auth, (req, res) => {
+  console.log(req.cookies.jwt);
+  res.render("chat");
+});
+// app.get('/logout', auth, async (req, res) => {
+//   try {
+//     // req.user.token = req.user.tokens.filter((currentElement) => {
+//     //   return currentElement.token !== req.token;
+//     // });
+//     res.clearCookie(jwt);
+//     console.log("logout successfully");
+//     await req.user.save();
+//     res.render("login");
+//   } catch (error) {
+//     res.status(500).send(error);
+//   }
+// });
+app.get('/logout',Userdata.logout_get);
 // Sign-up form
 app.post("/sign", async (req, res) => {
   try {
@@ -71,10 +77,13 @@ app.post("/sign", async (req, res) => {
         confirmpassword: req.body.confirmpassword,
       });
       const token = await userdata.generateAuthToken();
-      console.log(token);
-      res.cookie("jwt", token);
+      // console.log(token);
+      res.cookie("jwt", token, {
+        expires: new Date(Date.now() + 8.64e7),
+        httpOnly: true,
+      });
       const data = await userdata.save();
-      console.log(token);
+      // console.log(token);
 
       res.status(201).render("Desktop");
     } else {
@@ -96,8 +105,12 @@ app.post("/login", async (req, res) => {
     const passwordMatch = await bcrypt.compare(password, logindata.password);
 
     const token = await logindata.generateAuthToken();
-    console.log(token);
-
+    res.cookie("jwt", token, {
+      expires: new Date(Date.now() + 8.64e7),
+      httpOnly: true,
+    });
+   
+    // console.log(token);
     if (passwordMatch) {
       res.status(201).render("Desktop");
     } else {
